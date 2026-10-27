@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Illustrative orthogonal field descriptor v1",
+  "description": "A field descriptor defines separate representation, meaning, analytical roles, operations and provenance. It does not grant access or establish that a chart adapter implements a binding. Semantic cross-field rules and trusted authorization scope remain host responsibilities.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    },
+    "logicalType": {
+      "enum": [
+        "string",
+        "integer",
+        "decimal",
+        "boolean",
+        "date",
+        "timestamp",
+        "duration"
+      ]
+    },
+    "meaning": {
+      "enum": [
+        "entity_identifier",
+        "nominal_category",
+        "ordinal_category",
+        "event_time",
+        "calendar_date",
+        "elapsed_duration",
+        "quantity",
+        "currency_amount",
+        "ratio",
+        "free_text",
+        "boolean_flag"
+      ]
+    },
+    "analyticalRoles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "dimension",
+          "measure",
+          "time_dimension",
+          "entity_key"
+        ]
+      }
+    },
+    "operations": {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "eq",
+              "ne",
+              "in",
+              "lt",
+              "lte",
+              "gt",
+              "gte",
+              "between",
+              "is_null"
+            ]
+          }
+        },
+        "group": {
+          "type": "boolean"
+        },
+        "order": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "none",
+                "lexical",
+                "numeric",
+                "chronological",
+                "declared"
+              ]
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "kind",
+            "values"
+          ],
+          "additionalProperties": false
+        },
+        "aggregate": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "sum",
+              "avg",
+              "weighted_mean",
+              "min",
+              "max",
+              "count_rows",
+              "count_nonnull",
+              "count_distinct",
+              "ratio"
+            ]
+          }
+        }
+      },
+      "required": [
+        "filter",
+        "group",
+        "order",
+        "aggregate"
+      ],
+      "additionalProperties": false
+    },
+    "nullable": {
+      "type": "boolean"
+    },
+    "missingPolicy": {
+      "enum": [
+        "retain_null",
+        "explicit_group",
+        "reject"
+      ]
+    },
+    "unit": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "temporal": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "instant",
+                "date",
+                "duration"
+              ]
+            },
+            "unit": {
+              "enum": [
+                "millisecond",
+                "second",
+                "minute",
+                "hour",
+                "day"
+              ]
+            },
+            "zone": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "calendar": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "unit",
+            "zone",
+            "calendar"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authority": {
+          "enum": [
+            "generated_catalog",
+            "reviewed_catalog"
+          ]
+        }
+      },
+      "required": [
+        "sourceId",
+        "revision",
+        "authority"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "logicalType",
+    "meaning",
+    "analyticalRoles",
+    "operations",
+    "nullable",
+    "missingPolicy",
+    "unit",
+    "temporal",
+    "provenance"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "predicate": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "op": {
+          "enum": [
+            "eq",
+            "ne",
+            "in",
+            "lt",
+            "lte",
+            "gt",
+            "gte",
+            "between",
+            "is_null"
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            }
+          ]
+        },
+        "purpose": {
+          "enum": [
+            "analytical",
+            "authorization"
+          ]
+        },
+        "authority": {
+          "enum": [
+            "caller",
+            "server"
+          ]
+        },
+        "editable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "field",
+        "op",
+        "value",
+        "purpose",
+        "authority",
+        "editable"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

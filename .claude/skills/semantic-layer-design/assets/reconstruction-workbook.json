@@ -1,0 +1,60 @@
+{
+  "contract_version": 1,
+  "identity": {"scope_id": "scope_demo", "source_id": "source_demo", "query_id": "visit_ledger", "query_revision": "q1", "population_id": "all_visits", "generation_id": "g1"},
+  "query": {
+    "sql": "SELECT visit_id, site_code, site_name, zone, started_at, billed_amount, feedback_score, outcome FROM service_visits",
+    "parameterized_sql": "SELECT visit_id, site_code, site_name, zone, started_at, billed_amount, feedback_score, outcome FROM service_visits WHERE outcome = :outcome",
+    "parameter": {"name": "outcome", "logical_type": "string", "required": true, "nullable": false, "allowed_values": ["closed", "open", "void"], "approved_default": "closed", "approval_id": "fixture_approval"},
+    "grain_keys": ["visit_id"],
+    "timezone": "UTC",
+    "calendar": "gregorian"
+  },
+  "fields": [
+    {"field_id": "visit_id", "logical_type": "string", "meaning": "entity_identifier", "roles": ["entity_key"], "operations": {"filter": ["eq", "in"], "group": true, "order": "lexical", "aggregate": ["count_rows", "count_distinct"]}, "nullable": false, "missing_value_policy": "unsupported"},
+    {"field_id": "site_code", "logical_type": "integer", "meaning": "entity_identifier", "roles": ["entity_key", "dimension"], "operations": {"filter": ["eq", "in"], "group": true, "order": "numeric", "aggregate": ["count_distinct"]}, "nullable": false, "missing_value_policy": "unsupported"},
+    {"field_id": "site_name", "logical_type": "string", "meaning": "nominal_category", "roles": ["dimension"], "operations": {"filter": ["eq", "in"], "group": true, "order": "lexical", "aggregate": ["count_distinct"]}, "nullable": false, "missing_value_policy": "retain_as_group"},
+    {"field_id": "zone", "logical_type": "string", "meaning": "nominal_category", "roles": ["dimension"], "operations": {"filter": ["eq", "in"], "group": true, "order": "lexical", "aggregate": ["count_distinct"]}, "nullable": false, "missing_value_policy": "retain_as_group"},
+    {"field_id": "started_at", "logical_type": "timestamp", "meaning": "event_time", "roles": ["time_dimension"], "operations": {"filter": ["between"], "group": true, "order": "temporal", "aggregate": ["min", "max"]}, "nullable": false, "missing_value_policy": "unsupported"},
+    {"field_id": "billed_amount", "logical_type": "decimal", "meaning": "amount", "roles": ["measure"], "operations": {"filter": ["between"], "group": false, "order": "numeric", "aggregate": ["sum", "avg", "min", "max"]}, "nullable": false, "missing_value_policy": "exclude"},
+    {"field_id": "feedback_score", "logical_type": "integer", "meaning": "quantity", "roles": ["measure"], "operations": {"filter": ["between", "is_null"], "group": false, "order": "numeric", "aggregate": ["avg", "min", "max", "count_nonnull", "count_distinct"]}, "nullable": true, "missing_value_policy": "exclude"},
+    {"field_id": "outcome", "logical_type": "string", "meaning": "nominal_category", "roles": ["dimension"], "operations": {"filter": ["eq", "in"], "group": true, "order": "lexical", "aggregate": ["count_distinct"]}, "nullable": false, "missing_value_policy": "retain_as_group"}
+  ],
+  "metrics": [
+    {"metric_id": "billed_total", "field_id": "billed_amount", "aggregation": "sum", "behavior": "additive", "unit": "USD", "merge_state": ["sum"], "allowed_axes": ["site_name", "zone", "utc_month"]},
+    {"metric_id": "billed_mean", "field_id": "billed_amount", "aggregation": "avg", "behavior": "non_additive", "unit": "USD", "merge_state": ["sum", "nonnull_count"], "allowed_axes": ["site_name", "zone", "utc_month"]},
+    {"metric_id": "billed_min", "field_id": "billed_amount", "aggregation": "min", "behavior": "non_additive", "unit": "USD", "merge_state": ["min"], "allowed_axes": ["site_name", "zone", "utc_month"]},
+    {"metric_id": "billed_max", "field_id": "billed_amount", "aggregation": "max", "behavior": "non_additive", "unit": "USD", "merge_state": ["max"], "allowed_axes": ["site_name", "zone", "utc_month"]},
+    {"metric_id": "visit_count", "field_id": "visit_id", "aggregation": "count_rows", "behavior": "additive", "unit": "visits", "merge_state": ["row_count"], "allowed_axes": ["site_name", "zone", "utc_month"]},
+    {"metric_id": "feedback_count", "field_id": "feedback_score", "aggregation": "count_nonnull", "behavior": "additive", "unit": "responses", "merge_state": ["nonnull_count"], "allowed_axes": ["site_name", "zone", "utc_month"]},
+    {"metric_id": "site_count", "field_id": "site_code", "aggregation": "count_distinct", "behavior": "non_additive", "unit": "sites", "merge_state": ["distinct_values"], "allowed_axes": ["zone", "utc_month"]}
+  ],
+  "rows": [
+    {"visit_id": "v01", "site_code": 101, "site_name": "Birch Point", "zone": "Harbor", "started_at": "2026-02-28T23:30:00-05:00", "billed_amount": "100", "feedback_score": 5, "outcome": "closed"},
+    {"visit_id": "v02", "site_code": 101, "site_name": "Birch Point", "zone": "Harbor", "started_at": "2026-03-02T12:00:00+00:00", "billed_amount": "120", "feedback_score": null, "outcome": "closed"},
+    {"visit_id": "v03", "site_code": 101, "site_name": "Birch Point", "zone": "Harbor", "started_at": "2026-03-03T12:00:00+00:00", "billed_amount": "90", "feedback_score": 4, "outcome": "open"},
+    {"visit_id": "v04", "site_code": 101, "site_name": "Birch Point", "zone": "Hill", "started_at": "2026-03-04T12:00:00+00:00", "billed_amount": "200", "feedback_score": 5, "outcome": "closed"},
+    {"visit_id": "v05", "site_code": 101, "site_name": "Birch Point", "zone": "Harbor", "started_at": "2026-03-05T12:00:00+00:00", "billed_amount": "80", "feedback_score": null, "outcome": "closed"},
+    {"visit_id": "v06", "site_code": 101, "site_name": "Birch Point", "zone": "Harbor", "started_at": "2026-03-06T12:00:00+00:00", "billed_amount": "110", "feedback_score": 3, "outcome": "open"},
+    {"visit_id": "v07", "site_code": 202, "site_name": "Juniper Hub", "zone": "Harbor", "started_at": "2026-03-07T12:00:00+00:00", "billed_amount": "150", "feedback_score": 4, "outcome": "closed"},
+    {"visit_id": "v08", "site_code": 202, "site_name": "Juniper Hub", "zone": "Hill", "started_at": "2026-03-08T12:00:00+00:00", "billed_amount": "170", "feedback_score": null, "outcome": "closed"},
+    {"visit_id": "v09", "site_code": 202, "site_name": "Juniper Hub", "zone": "Hill", "started_at": "2026-03-09T12:00:00+00:00", "billed_amount": "130", "feedback_score": 5, "outcome": "open"},
+    {"visit_id": "v10", "site_code": 202, "site_name": "Juniper Hub", "zone": "Harbor", "started_at": "2026-03-10T12:00:00+00:00", "billed_amount": "160", "feedback_score": 4, "outcome": "closed"},
+    {"visit_id": "v11", "site_code": 303, "site_name": "Willow Yard", "zone": "Lake", "started_at": "2026-03-11T12:00:00+00:00", "billed_amount": "75", "feedback_score": null, "outcome": "void"},
+    {"visit_id": "v12", "site_code": 303, "site_name": "Willow Yard", "zone": "Lake", "started_at": "2026-03-12T12:00:00+00:00", "billed_amount": "95", "feedback_score": 5, "outcome": "closed"}
+  ],
+  "candidate_meaning": {"field_id": "billed_amount", "generation_id": "g1", "description": {"value": "Amount recorded for a visit"}, "unit": {"value": "USD"}, "allowed_aggregations": ["sum", "avg", "min", "max"], "guidance": ["Candidate guidance awaiting review"], "status": "supplied_illustration", "evidence_refs": ["profile_billed_amount"]},
+  "review_authority": {"review_description": {"scope_id": "scope_demo", "field_id": "billed_amount", "query_revision": "q1"}, "review_guidance": {"scope_id": "scope_demo", "field_id": "billed_amount", "query_revision": "q1"}},
+  "reviewed_edits": [
+    {"review_id": "review_description", "field_id": "billed_amount", "generation_id": "g1", "operation": "replace", "path": "description", "value": "Amount billed for one visit before outcome filtering"},
+    {"review_id": "review_guidance", "field_id": "billed_amount", "generation_id": "g1", "operation": "replace", "path": "guidance", "value": ["Do not sum repeated visit amounts after a one-to-many join"]}
+  ],
+  "value_policy": {"purpose": "illustrative_fixture_policy", "max_distinct": 10, "max_average_length": 40, "max_unique_fraction": 0.9, "max_values": 10},
+  "embedding_contract": {"space_id": "fixture_space", "revision": "1", "dimensions": 3, "distance": "cosine", "normalization": "l2", "document_encoder": {"model_id": "fixture_document_encoder", "revision": "1", "recipe": "value_context_v1"}, "query_encoder": {"model_id": "fixture_query_encoder", "revision": "2", "recipe": "query_context_v1"}},
+  "variants": {
+    "mean_groups": [{"sum": 10, "nonnull_count": 1}, {"sum": 180, "nonnull_count": 9}],
+    "ratio_groups": [{"numerator": 1, "denominator": 1}, {"numerator": 1, "denominator": 9}],
+    "overlapping_distinct": [["site_a", "site_b"], ["site_b", "site_c"]],
+    "snapshot_values": [{"at": "2026-03-01", "value": 300}, {"at": "2026-03-02", "value": 200}]
+  },
+  "expected": {"rows": 12, "feedback_nonnull": 8, "feedback_distinct": 3, "site_distinct": 3, "total_billed": 1480, "closed_rows": 8, "closed_billed": 1075, "closed_by_zone": {"Harbor": 610, "Hill": 370, "Lake": 95}, "outcome_frequencies": {"closed": 8, "open": 3, "void": 1}, "reviewed_description": "Amount billed for one visit before outcome filtering", "reviewed_guidance": ["Do not sum repeated visit amounts after a one-to-many join"]}
+}

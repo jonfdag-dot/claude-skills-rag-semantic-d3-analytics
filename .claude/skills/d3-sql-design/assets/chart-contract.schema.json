@@ -1,0 +1,525 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed portable chart contract v1",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capability": {
+      "enum": [
+        "line.single",
+        "line.multi",
+        "line.dualAxis",
+        "line.stackedArea",
+        "bar.standard",
+        "bar.grouped",
+        "bar.stacked",
+        "bar.race"
+      ]
+    },
+    "capabilityVersion": {
+      "const": 1
+    },
+    "shape": {
+      "enum": [
+        "single",
+        "long",
+        "dual",
+        "category-time"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relation": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "rowGrain": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "snapshot": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "relation",
+        "rowGrain",
+        "snapshot"
+      ],
+      "additionalProperties": false
+    },
+    "roles": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "object",
+          "properties": {
+            "alias": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "type": {
+              "enum": [
+                "category",
+                "temporal",
+                "number"
+              ]
+            },
+            "ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "alias",
+            "type",
+            "ref",
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "y": {
+          "type": "object",
+          "properties": {
+            "alias": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "type": {
+              "enum": [
+                "category",
+                "temporal",
+                "number"
+              ]
+            },
+            "ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "alias",
+            "type",
+            "ref",
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "y2": {
+          "type": "object",
+          "properties": {
+            "alias": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "type": {
+              "enum": [
+                "category",
+                "temporal",
+                "number"
+              ]
+            },
+            "ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "alias",
+            "type",
+            "ref",
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "series": {
+          "type": "object",
+          "properties": {
+            "alias": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "type": {
+              "enum": [
+                "category",
+                "temporal",
+                "number"
+              ]
+            },
+            "ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "alias",
+            "type",
+            "ref",
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "time": {
+          "type": "object",
+          "properties": {
+            "alias": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "type": {
+              "enum": [
+                "category",
+                "temporal",
+                "number"
+              ]
+            },
+            "ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "alias",
+            "type",
+            "ref",
+            "label"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false,
+      "description": "Display bindings. The type enum describes encoding kind, separately from logical type, semantic meaning, analytical roles and operation capabilities in field-contract.schema.json."
+    },
+    "metrics": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "enum": [
+              "sum",
+              "avg",
+              "min",
+              "max",
+              "count_rows",
+              "count_nonnull",
+              "count_distinct",
+              "ratio"
+            ]
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "uniqueItems": true
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "population": {
+            "type": "string",
+            "minLength": 1
+          },
+          "nullPolicy": {
+            "enum": [
+              "include-rows",
+              "ignore-input-nulls"
+            ]
+          },
+          "merge": {
+            "enum": [
+              "sum",
+              "sum-count",
+              "min",
+              "max",
+              "ratio-components",
+              "requery"
+            ]
+          },
+          "state": {
+            "type": "object",
+            "propertyNames": {
+              "enum": [
+                "sum",
+                "count",
+                "min",
+                "max",
+                "numerator",
+                "denominator"
+              ]
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            }
+          }
+        },
+        "required": [
+          "operation",
+          "inputs",
+          "unit",
+          "population",
+          "nullPolicy",
+          "merge",
+          "state"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "resultGrain": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "time": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "x",
+                "time"
+              ]
+            },
+            "sourceField": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "zone": {
+              "type": "string",
+              "minLength": 1
+            },
+            "grain": {
+              "enum": [
+                "day",
+                "week",
+                "month",
+                "hour"
+              ]
+            },
+            "origin": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "interval": {
+              "const": "[start,end)"
+            },
+            "missing": {
+              "enum": [
+                "gap",
+                "zero-with-proof"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "sourceField",
+            "zone",
+            "grain",
+            "origin",
+            "interval",
+            "missing"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "filters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "op": {
+            "enum": [
+              ">=",
+              "<",
+              "="
+            ]
+          },
+          "parameter": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "field",
+          "op",
+          "parameter"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "parameterTypes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "text",
+          "number",
+          "boolean"
+        ]
+      }
+    },
+    "order": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "alias": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "direction": {
+            "enum": [
+              "asc",
+              "desc"
+            ]
+          }
+        },
+        "required": [
+          "alias",
+          "direction"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "stackMode": {
+          "enum": [
+            "none",
+            "stacked",
+            "percent"
+          ]
+        },
+        "orientation": {
+          "enum": [
+            "vertical",
+            "horizontal"
+          ]
+        },
+        "curveType": {
+          "enum": [
+            "linear",
+            "monotone"
+          ]
+        },
+        "labels": {
+          "enum": [
+            "auto",
+            "none"
+          ]
+        }
+      },
+      "required": [
+        "stackMode"
+      ],
+      "additionalProperties": false
+    },
+    "resultPolicy": {
+      "type": "object",
+      "properties": {
+        "maxRows": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxCells": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "requiresComplete": {
+          "const": true
+        }
+      },
+      "required": [
+        "maxRows",
+        "maxCells",
+        "requiresComplete"
+      ],
+      "additionalProperties": false,
+      "description": "Host-selected resource bounds, enforced again by the executor; the fixture values are illustrative configuration, not universal limits or evidence of completeness."
+    }
+  },
+  "required": [
+    "version",
+    "id",
+    "capability",
+    "capabilityVersion",
+    "shape",
+    "source",
+    "roles",
+    "metrics",
+    "resultGrain",
+    "time",
+    "filters",
+    "parameterTypes",
+    "order",
+    "options",
+    "resultPolicy"
+  ],
+  "additionalProperties": false
+}

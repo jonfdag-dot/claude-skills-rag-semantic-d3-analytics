@@ -1,0 +1,509 @@
+{
+  "status": "synthetic-contract-fixtures",
+  "description": "The first seven fields describe events.json; additional fields demonstrate taxonomy and encoding boundaries. A metadata example does not assert a renderer exists.",
+  "fields": [
+    {
+      "id": "event_id",
+      "logicalType": "string",
+      "meaning": "entity_identifier",
+      "analyticalRoles": [
+        "entity_key"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "in"
+        ],
+        "group": true,
+        "order": {
+          "kind": "lexical",
+          "values": []
+        },
+        "aggregate": [
+          "count_rows",
+          "count_nonnull",
+          "count_distinct"
+        ]
+      },
+      "nullable": false,
+      "missingPolicy": "reject",
+      "unit": null,
+      "temporal": null,
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "user_id",
+      "logicalType": "string",
+      "meaning": "entity_identifier",
+      "analyticalRoles": [
+        "entity_key",
+        "dimension"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "in"
+        ],
+        "group": true,
+        "order": {
+          "kind": "lexical",
+          "values": []
+        },
+        "aggregate": [
+          "count_nonnull",
+          "count_distinct"
+        ]
+      },
+      "nullable": false,
+      "missingPolicy": "reject",
+      "unit": null,
+      "temporal": null,
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "ts_utc",
+      "logicalType": "timestamp",
+      "meaning": "event_time",
+      "analyticalRoles": [
+        "time_dimension",
+        "dimension"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "gte",
+          "lt",
+          "between"
+        ],
+        "group": true,
+        "order": {
+          "kind": "chronological",
+          "values": []
+        },
+        "aggregate": []
+      },
+      "nullable": false,
+      "missingPolicy": "reject",
+      "unit": null,
+      "temporal": {
+        "kind": "instant",
+        "unit": "second",
+        "zone": "UTC",
+        "calendar": "gregorian"
+      },
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "channel",
+      "logicalType": "string",
+      "meaning": "nominal_category",
+      "analyticalRoles": [
+        "dimension"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "in",
+          "is_null"
+        ],
+        "group": true,
+        "order": {
+          "kind": "lexical",
+          "values": []
+        },
+        "aggregate": [
+          "count_nonnull",
+          "count_distinct"
+        ]
+      },
+      "nullable": true,
+      "missingPolicy": "retain_null",
+      "unit": null,
+      "temporal": null,
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "value",
+      "logicalType": "decimal",
+      "meaning": "currency_amount",
+      "analyticalRoles": [
+        "measure"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "gte",
+          "lt",
+          "between",
+          "is_null"
+        ],
+        "group": false,
+        "order": {
+          "kind": "numeric",
+          "values": []
+        },
+        "aggregate": [
+          "sum",
+          "avg",
+          "weighted_mean",
+          "min",
+          "max",
+          "count_nonnull"
+        ]
+      },
+      "nullable": true,
+      "missingPolicy": "retain_null",
+      "unit": "USD",
+      "temporal": null,
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "converted",
+      "logicalType": "integer",
+      "meaning": "boolean_flag",
+      "analyticalRoles": [
+        "measure"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "in"
+        ],
+        "group": true,
+        "order": {
+          "kind": "numeric",
+          "values": []
+        },
+        "aggregate": [
+          "sum",
+          "count_nonnull"
+        ]
+      },
+      "nullable": false,
+      "missingPolicy": "reject",
+      "unit": "events",
+      "temporal": null,
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "eligible",
+      "logicalType": "integer",
+      "meaning": "boolean_flag",
+      "analyticalRoles": [
+        "measure"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "in"
+        ],
+        "group": true,
+        "order": {
+          "kind": "numeric",
+          "values": []
+        },
+        "aggregate": [
+          "sum",
+          "count_nonnull"
+        ]
+      },
+      "nullable": false,
+      "missingPolicy": "reject",
+      "unit": "events",
+      "temporal": null,
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "account_code",
+      "logicalType": "integer",
+      "meaning": "entity_identifier",
+      "analyticalRoles": [
+        "entity_key",
+        "dimension"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "in"
+        ],
+        "group": true,
+        "order": {
+          "kind": "numeric",
+          "values": []
+        },
+        "aggregate": [
+          "count_nonnull",
+          "count_distinct"
+        ]
+      },
+      "nullable": false,
+      "missingPolicy": "reject",
+      "unit": null,
+      "temporal": null,
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "priority",
+      "logicalType": "string",
+      "meaning": "ordinal_category",
+      "analyticalRoles": [
+        "dimension"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "in"
+        ],
+        "group": true,
+        "order": {
+          "kind": "declared",
+          "values": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "aggregate": [
+          "count_nonnull",
+          "count_distinct"
+        ]
+      },
+      "nullable": false,
+      "missingPolicy": "reject",
+      "unit": null,
+      "temporal": null,
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "business_date",
+      "logicalType": "date",
+      "meaning": "calendar_date",
+      "analyticalRoles": [
+        "time_dimension",
+        "dimension"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "gte",
+          "lt",
+          "between"
+        ],
+        "group": true,
+        "order": {
+          "kind": "chronological",
+          "values": []
+        },
+        "aggregate": []
+      },
+      "nullable": false,
+      "missingPolicy": "reject",
+      "unit": null,
+      "temporal": {
+        "kind": "date",
+        "unit": "day",
+        "zone": null,
+        "calendar": "gregorian"
+      },
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    },
+    {
+      "id": "elapsed_seconds",
+      "logicalType": "duration",
+      "meaning": "elapsed_duration",
+      "analyticalRoles": [
+        "measure"
+      ],
+      "operations": {
+        "filter": [
+          "eq",
+          "gte",
+          "lt",
+          "between"
+        ],
+        "group": false,
+        "order": {
+          "kind": "numeric",
+          "values": []
+        },
+        "aggregate": [
+          "sum",
+          "avg",
+          "weighted_mean",
+          "min",
+          "max"
+        ]
+      },
+      "nullable": false,
+      "missingPolicy": "reject",
+      "unit": "second",
+      "temporal": {
+        "kind": "duration",
+        "unit": "second",
+        "zone": null,
+        "calendar": null
+      },
+      "provenance": {
+        "sourceId": "events-v1",
+        "revision": "catalog-v1",
+        "authority": "reviewed_catalog"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "field": "channel",
+      "role": "x",
+      "expectedKind": "category"
+    },
+    {
+      "field": "account_code",
+      "role": "x",
+      "expectedKind": "category"
+    },
+    {
+      "field": "priority",
+      "role": "x",
+      "expectedKind": "category"
+    },
+    {
+      "field": "ts_utc",
+      "role": "x",
+      "expectedKind": "temporal"
+    },
+    {
+      "field": "business_date",
+      "role": "x",
+      "expectedKind": "temporal"
+    },
+    {
+      "field": "elapsed_seconds",
+      "role": "y",
+      "operation": "avg",
+      "expectedKind": "number"
+    },
+    {
+      "field": "value",
+      "role": "y",
+      "operation": "avg",
+      "expectedKind": "number"
+    }
+  ],
+  "predicates": [
+    {
+      "field": "channel",
+      "op": "in",
+      "value": [
+        "A",
+        "B"
+      ],
+      "purpose": "analytical",
+      "authority": "caller",
+      "editable": true
+    },
+    {
+      "field": "ts_utc",
+      "op": "gte",
+      "value": "2026-01-01T00:00:00Z",
+      "purpose": "analytical",
+      "authority": "caller",
+      "editable": true
+    },
+    {
+      "field": "business_date",
+      "op": "eq",
+      "value": "2026-01-01",
+      "purpose": "analytical",
+      "authority": "caller",
+      "editable": true
+    },
+    {
+      "field": "elapsed_seconds",
+      "op": "between",
+      "value": [
+        30,
+        90
+      ],
+      "purpose": "analytical",
+      "authority": "caller",
+      "editable": true
+    }
+  ],
+  "scope": {
+    "serverPredicate": {
+      "field": "channel",
+      "op": "eq",
+      "value": "A",
+      "purpose": "authorization",
+      "authority": "server",
+      "editable": false
+    },
+    "callerPredicates": [
+      {
+        "field": "channel",
+        "op": "in",
+        "value": [
+          "A",
+          "B"
+        ],
+        "purpose": "analytical",
+        "authority": "caller",
+        "editable": true
+      },
+      {
+        "field": "channel",
+        "op": "eq",
+        "value": "B",
+        "purpose": "analytical",
+        "authority": "caller",
+        "editable": true
+      }
+    ],
+    "expectedChannels": [
+      [
+        "A"
+      ],
+      []
+    ]
+  }
+}

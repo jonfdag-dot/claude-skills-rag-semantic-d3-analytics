@@ -1,0 +1,93 @@
+{
+  "status": "ready",
+  "contract": {
+    "version": 1,
+    "id": "category-avg",
+    "capability": "bar.standard",
+    "capabilityVersion": 1,
+    "shape": "single",
+    "source": {
+      "id": "events-v1",
+      "relation": "events",
+      "rowGrain": [
+        "event_id"
+      ],
+      "snapshot": "synthetic-v1"
+    },
+    "roles": {
+      "x": {
+        "alias": "x",
+        "type": "category",
+        "ref": "channel",
+        "label": "Channel"
+      },
+      "y": {
+        "alias": "y",
+        "type": "number",
+        "ref": "mean_value",
+        "label": "Mean value"
+      }
+    },
+    "metrics": {
+      "mean_value": {
+        "operation": "avg",
+        "inputs": [
+          "value"
+        ],
+        "unit": "USD",
+        "population": "filtered-events",
+        "nullPolicy": "ignore-input-nulls",
+        "merge": "sum-count",
+        "state": {
+          "sum": "s_y",
+          "count": "n_y"
+        }
+      }
+    },
+    "resultGrain": [
+      "x"
+    ],
+    "time": null,
+    "filters": [
+      {
+        "field": "ts_utc",
+        "op": ">=",
+        "parameter": 1
+      },
+      {
+        "field": "ts_utc",
+        "op": "<",
+        "parameter": 2
+      }
+    ],
+    "parameterTypes": [
+      "text",
+      "text"
+    ],
+    "order": [
+      {
+        "alias": "x",
+        "direction": "asc"
+      }
+    ],
+    "options": {
+      "stackMode": "none"
+    },
+    "resultPolicy": {
+      "maxRows": 64,
+      "maxCells": 256,
+      "requiresComplete": true
+    }
+  },
+  "sql": "SELECT channel AS x, AVG(value) AS y, SUM(value) AS s_y, COUNT(value) AS n_y FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY channel ORDER BY x",
+  "params": [
+    "2026-01-01T00:00:00Z",
+    "2026-01-02T00:00:00Z"
+  ],
+  "roleAliasMap": {
+    "x": "x",
+    "y": "y"
+  },
+  "reasoningSummary": "A category comparison uses one mean per channel and retains sum/count for a valid combined mean.",
+  "changeSummary": "Created the first-day mean-value contract; no source filters were removed."
+}

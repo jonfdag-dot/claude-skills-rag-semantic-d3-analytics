@@ -1,0 +1,1057 @@
+{
+  "dialect": "PostgreSQL-compatible aggregate subset over normalized UTC text; executed by the verifier on SQLite",
+  "examples": [
+    {
+      "id": "category-avg",
+      "contract": {
+        "version": 1,
+        "id": "category-avg",
+        "capability": "bar.standard",
+        "capabilityVersion": 1,
+        "shape": "single",
+        "source": {
+          "id": "events-v1",
+          "relation": "events",
+          "rowGrain": [
+            "event_id"
+          ],
+          "snapshot": "synthetic-v1"
+        },
+        "roles": {
+          "x": {
+            "alias": "x",
+            "type": "category",
+            "ref": "channel",
+            "label": "Channel"
+          },
+          "y": {
+            "alias": "y",
+            "type": "number",
+            "ref": "mean_value",
+            "label": "Mean value"
+          }
+        },
+        "metrics": {
+          "mean_value": {
+            "operation": "avg",
+            "inputs": [
+              "value"
+            ],
+            "unit": "USD",
+            "population": "filtered-events",
+            "nullPolicy": "ignore-input-nulls",
+            "merge": "sum-count",
+            "state": {
+              "sum": "s_y",
+              "count": "n_y"
+            }
+          }
+        },
+        "resultGrain": [
+          "x"
+        ],
+        "time": null,
+        "filters": [
+          {
+            "field": "ts_utc",
+            "op": ">=",
+            "parameter": 1
+          },
+          {
+            "field": "ts_utc",
+            "op": "<",
+            "parameter": 2
+          }
+        ],
+        "parameterTypes": [
+          "text",
+          "text"
+        ],
+        "order": [
+          {
+            "alias": "x",
+            "direction": "asc"
+          }
+        ],
+        "options": {
+          "stackMode": "none"
+        },
+        "resultPolicy": {
+          "maxRows": 64,
+          "maxCells": 256,
+          "requiresComplete": true
+        }
+      },
+      "sql": "SELECT channel AS x, AVG(value) AS y, SUM(value) AS s_y, COUNT(value) AS n_y FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY channel ORDER BY x",
+      "params": [
+        "2026-01-01T00:00:00Z",
+        "2026-01-02T00:00:00Z"
+      ],
+      "roleAliasMap": {
+        "x": "x",
+        "y": "y"
+      },
+      "expectedRows": [
+        {
+          "x": "A",
+          "y": 15,
+          "s_y": 30,
+          "n_y": 2
+        },
+        {
+          "x": "B",
+          "y": 90,
+          "s_y": 90,
+          "n_y": 1
+        }
+      ],
+      "complete": true,
+      "expectedBehavior": "Two bars at 15 and 90 USD. Combined mean is 40, not 52.5 or 105."
+    },
+    {
+      "id": "daily-channel-sum",
+      "contract": {
+        "version": 1,
+        "id": "daily-channel-sum",
+        "capability": "line.multi",
+        "capabilityVersion": 1,
+        "shape": "long",
+        "source": {
+          "id": "events-v1",
+          "relation": "events",
+          "rowGrain": [
+            "event_id"
+          ],
+          "snapshot": "synthetic-v1"
+        },
+        "roles": {
+          "x": {
+            "alias": "x",
+            "type": "temporal",
+            "ref": "ts_utc",
+            "label": "UTC day"
+          },
+          "series": {
+            "alias": "series",
+            "type": "category",
+            "ref": "channel",
+            "label": "Channel"
+          },
+          "y": {
+            "alias": "y",
+            "type": "number",
+            "ref": "total_value",
+            "label": "Total value"
+          }
+        },
+        "metrics": {
+          "total_value": {
+            "operation": "sum",
+            "inputs": [
+              "value"
+            ],
+            "unit": "USD",
+            "population": "filtered-events",
+            "nullPolicy": "ignore-input-nulls",
+            "merge": "sum",
+            "state": {
+              "sum": "y",
+              "count": "n_y"
+            }
+          }
+        },
+        "resultGrain": [
+          "x",
+          "series"
+        ],
+        "time": {
+          "role": "x",
+          "sourceField": "ts_utc",
+          "zone": "UTC",
+          "grain": "day",
+          "origin": null,
+          "interval": "[start,end)",
+          "missing": "gap"
+        },
+        "filters": [
+          {
+            "field": "ts_utc",
+            "op": ">=",
+            "parameter": 1
+          },
+          {
+            "field": "ts_utc",
+            "op": "<",
+            "parameter": 2
+          }
+        ],
+        "parameterTypes": [
+          "text",
+          "text"
+        ],
+        "order": [
+          {
+            "alias": "x",
+            "direction": "asc"
+          },
+          {
+            "alias": "series",
+            "direction": "asc"
+          }
+        ],
+        "options": {
+          "stackMode": "none"
+        },
+        "resultPolicy": {
+          "maxRows": 64,
+          "maxCells": 256,
+          "requiresComplete": true
+        }
+      },
+      "sql": "SELECT substr(ts_utc, 1, 10) || 'T00:00:00Z' AS x, channel AS series, SUM(value) AS y, COUNT(value) AS n_y FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY 1, channel ORDER BY x, series",
+      "params": [
+        "2026-01-01T00:00:00Z",
+        "2026-01-04T00:00:00Z"
+      ],
+      "roleAliasMap": {
+        "x": "x",
+        "series": "series",
+        "y": "y"
+      },
+      "expectedRows": [
+        {
+          "x": "2026-01-01T00:00:00Z",
+          "series": "A",
+          "y": 30,
+          "n_y": 2
+        },
+        {
+          "x": "2026-01-01T00:00:00Z",
+          "series": "B",
+          "y": 90,
+          "n_y": 1
+        },
+        {
+          "x": "2026-01-02T00:00:00Z",
+          "series": "A",
+          "y": 30,
+          "n_y": 1
+        },
+        {
+          "x": "2026-01-02T00:00:00Z",
+          "series": "B",
+          "y": 120,
+          "n_y": 2
+        },
+        {
+          "x": "2026-01-03T00:00:00Z",
+          "series": "A",
+          "y": null,
+          "n_y": 0
+        }
+      ],
+      "complete": true,
+      "expectedBehavior": "Two chronological paths. A has an explicit null on day 3; B has no row then. A declared daily grid may materialize a B gap, never an invented zero."
+    },
+    {
+      "id": "daily-dual",
+      "contract": {
+        "version": 1,
+        "id": "daily-dual",
+        "capability": "line.dualAxis",
+        "capabilityVersion": 1,
+        "shape": "dual",
+        "source": {
+          "id": "events-v1",
+          "relation": "events",
+          "rowGrain": [
+            "event_id"
+          ],
+          "snapshot": "synthetic-v1"
+        },
+        "roles": {
+          "x": {
+            "alias": "x",
+            "type": "temporal",
+            "ref": "ts_utc",
+            "label": "UTC day"
+          },
+          "y": {
+            "alias": "y",
+            "type": "number",
+            "ref": "total_value",
+            "label": "Total value"
+          },
+          "y2": {
+            "alias": "y2",
+            "type": "number",
+            "ref": "conversion_rate",
+            "label": "Conversion rate"
+          }
+        },
+        "metrics": {
+          "total_value": {
+            "operation": "sum",
+            "inputs": [
+              "value"
+            ],
+            "unit": "USD",
+            "population": "filtered-events",
+            "nullPolicy": "ignore-input-nulls",
+            "merge": "sum",
+            "state": {
+              "sum": "y",
+              "count": "n_y"
+            }
+          },
+          "conversion_rate": {
+            "operation": "ratio",
+            "inputs": [
+              "converted",
+              "eligible"
+            ],
+            "unit": "percent",
+            "population": "filtered-events",
+            "nullPolicy": "ignore-input-nulls",
+            "merge": "ratio-components",
+            "state": {
+              "numerator": "num_y2",
+              "denominator": "den_y2"
+            }
+          }
+        },
+        "resultGrain": [
+          "x"
+        ],
+        "time": {
+          "role": "x",
+          "sourceField": "ts_utc",
+          "zone": "UTC",
+          "grain": "day",
+          "origin": null,
+          "interval": "[start,end)",
+          "missing": "gap"
+        },
+        "filters": [
+          {
+            "field": "ts_utc",
+            "op": ">=",
+            "parameter": 1
+          },
+          {
+            "field": "ts_utc",
+            "op": "<",
+            "parameter": 2
+          }
+        ],
+        "parameterTypes": [
+          "text",
+          "text"
+        ],
+        "order": [
+          {
+            "alias": "x",
+            "direction": "asc"
+          }
+        ],
+        "options": {
+          "stackMode": "none"
+        },
+        "resultPolicy": {
+          "maxRows": 64,
+          "maxCells": 256,
+          "requiresComplete": true
+        }
+      },
+      "sql": "SELECT substr(ts_utc, 1, 10) || 'T00:00:00Z' AS x, SUM(value) AS y, COUNT(value) AS n_y, 100.0 * SUM(converted) / NULLIF(SUM(eligible), 0) AS y2, SUM(converted) AS num_y2, SUM(eligible) AS den_y2 FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY 1 ORDER BY x",
+      "params": [
+        "2026-01-01T00:00:00Z",
+        "2026-01-04T00:00:00Z"
+      ],
+      "roleAliasMap": {
+        "x": "x",
+        "y": "y",
+        "y2": "y2"
+      },
+      "expectedRows": [
+        {
+          "x": "2026-01-01T00:00:00Z",
+          "y": 120,
+          "n_y": 3,
+          "y2": 50,
+          "num_y2": 2,
+          "den_y2": 4
+        },
+        {
+          "x": "2026-01-02T00:00:00Z",
+          "y": 150,
+          "n_y": 3,
+          "y2": 66.66666666666667,
+          "num_y2": 2,
+          "den_y2": 3
+        },
+        {
+          "x": "2026-01-03T00:00:00Z",
+          "y": null,
+          "n_y": 0,
+          "y2": null,
+          "num_y2": 0,
+          "den_y2": 0
+        }
+      ],
+      "complete": true,
+      "expectedBehavior": "Independent USD and percent axes joined by UTC day. Day 3 is unknown on both axes. Rollup rate is 400/7 percent, not the mean or sum of daily rates."
+    },
+    {
+      "id": "category-min",
+      "contract": {
+        "version": 1,
+        "id": "category-min",
+        "capability": "bar.standard",
+        "capabilityVersion": 1,
+        "shape": "single",
+        "source": {
+          "id": "events-v1",
+          "relation": "events",
+          "rowGrain": [
+            "event_id"
+          ],
+          "snapshot": "synthetic-v1"
+        },
+        "roles": {
+          "x": {
+            "alias": "x",
+            "type": "category",
+            "ref": "channel",
+            "label": "Channel"
+          },
+          "y": {
+            "alias": "y",
+            "type": "number",
+            "ref": "metric",
+            "label": "min"
+          }
+        },
+        "metrics": {
+          "metric": {
+            "operation": "min",
+            "inputs": [
+              "value"
+            ],
+            "unit": "USD",
+            "population": "filtered-events",
+            "nullPolicy": "ignore-input-nulls",
+            "merge": "min",
+            "state": {
+              "min": "y"
+            }
+          }
+        },
+        "resultGrain": [
+          "x"
+        ],
+        "time": null,
+        "filters": [
+          {
+            "field": "ts_utc",
+            "op": ">=",
+            "parameter": 1
+          },
+          {
+            "field": "ts_utc",
+            "op": "<",
+            "parameter": 2
+          }
+        ],
+        "parameterTypes": [
+          "text",
+          "text"
+        ],
+        "order": [
+          {
+            "alias": "x",
+            "direction": "asc"
+          }
+        ],
+        "options": {
+          "stackMode": "none"
+        },
+        "resultPolicy": {
+          "maxRows": 64,
+          "maxCells": 256,
+          "requiresComplete": true
+        }
+      },
+      "sql": "SELECT channel AS x, MIN(value) AS y FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY channel ORDER BY x",
+      "params": [
+        "2026-01-01T00:00:00Z",
+        "2026-01-02T00:00:00Z"
+      ],
+      "roleAliasMap": {
+        "x": "x",
+        "y": "y"
+      },
+      "expectedRows": [
+        {
+          "x": "A",
+          "y": 10
+        },
+        {
+          "x": "B",
+          "y": 90
+        }
+      ],
+      "complete": true,
+      "expectedBehavior": "Preserve min at the filtered event grain; do not count or sum marks as a new measure."
+    },
+    {
+      "id": "category-max",
+      "contract": {
+        "version": 1,
+        "id": "category-max",
+        "capability": "bar.standard",
+        "capabilityVersion": 1,
+        "shape": "single",
+        "source": {
+          "id": "events-v1",
+          "relation": "events",
+          "rowGrain": [
+            "event_id"
+          ],
+          "snapshot": "synthetic-v1"
+        },
+        "roles": {
+          "x": {
+            "alias": "x",
+            "type": "category",
+            "ref": "channel",
+            "label": "Channel"
+          },
+          "y": {
+            "alias": "y",
+            "type": "number",
+            "ref": "metric",
+            "label": "max"
+          }
+        },
+        "metrics": {
+          "metric": {
+            "operation": "max",
+            "inputs": [
+              "value"
+            ],
+            "unit": "USD",
+            "population": "filtered-events",
+            "nullPolicy": "ignore-input-nulls",
+            "merge": "max",
+            "state": {
+              "max": "y"
+            }
+          }
+        },
+        "resultGrain": [
+          "x"
+        ],
+        "time": null,
+        "filters": [
+          {
+            "field": "ts_utc",
+            "op": ">=",
+            "parameter": 1
+          },
+          {
+            "field": "ts_utc",
+            "op": "<",
+            "parameter": 2
+          }
+        ],
+        "parameterTypes": [
+          "text",
+          "text"
+        ],
+        "order": [
+          {
+            "alias": "x",
+            "direction": "asc"
+          }
+        ],
+        "options": {
+          "stackMode": "none"
+        },
+        "resultPolicy": {
+          "maxRows": 64,
+          "maxCells": 256,
+          "requiresComplete": true
+        }
+      },
+      "sql": "SELECT channel AS x, MAX(value) AS y FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY channel ORDER BY x",
+      "params": [
+        "2026-01-01T00:00:00Z",
+        "2026-01-02T00:00:00Z"
+      ],
+      "roleAliasMap": {
+        "x": "x",
+        "y": "y"
+      },
+      "expectedRows": [
+        {
+          "x": "A",
+          "y": 20
+        },
+        {
+          "x": "B",
+          "y": 90
+        }
+      ],
+      "complete": true,
+      "expectedBehavior": "Preserve max at the filtered event grain; do not count or sum marks as a new measure."
+    },
+    {
+      "id": "category-count_rows",
+      "contract": {
+        "version": 1,
+        "id": "category-count_rows",
+        "capability": "bar.standard",
+        "capabilityVersion": 1,
+        "shape": "single",
+        "source": {
+          "id": "events-v1",
+          "relation": "events",
+          "rowGrain": [
+            "event_id"
+          ],
+          "snapshot": "synthetic-v1"
+        },
+        "roles": {
+          "x": {
+            "alias": "x",
+            "type": "category",
+            "ref": "channel",
+            "label": "Channel"
+          },
+          "y": {
+            "alias": "y",
+            "type": "number",
+            "ref": "metric",
+            "label": "count_rows"
+          }
+        },
+        "metrics": {
+          "metric": {
+            "operation": "count_rows",
+            "inputs": [],
+            "unit": "events",
+            "population": "filtered-events",
+            "nullPolicy": "include-rows",
+            "merge": "sum",
+            "state": {
+              "count": "y"
+            }
+          }
+        },
+        "resultGrain": [
+          "x"
+        ],
+        "time": null,
+        "filters": [
+          {
+            "field": "ts_utc",
+            "op": ">=",
+            "parameter": 1
+          },
+          {
+            "field": "ts_utc",
+            "op": "<",
+            "parameter": 2
+          }
+        ],
+        "parameterTypes": [
+          "text",
+          "text"
+        ],
+        "order": [
+          {
+            "alias": "x",
+            "direction": "asc"
+          }
+        ],
+        "options": {
+          "stackMode": "none"
+        },
+        "resultPolicy": {
+          "maxRows": 64,
+          "maxCells": 256,
+          "requiresComplete": true
+        }
+      },
+      "sql": "SELECT channel AS x, COUNT(*) AS y FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY channel ORDER BY x",
+      "params": [
+        "2026-01-01T00:00:00Z",
+        "2026-01-02T00:00:00Z"
+      ],
+      "roleAliasMap": {
+        "x": "x",
+        "y": "y"
+      },
+      "expectedRows": [
+        {
+          "x": "A",
+          "y": 3
+        },
+        {
+          "x": "B",
+          "y": 1
+        }
+      ],
+      "complete": true,
+      "expectedBehavior": "Preserve count_rows at the filtered event grain; do not count or sum marks as a new measure."
+    },
+    {
+      "id": "category-count_nonnull",
+      "contract": {
+        "version": 1,
+        "id": "category-count_nonnull",
+        "capability": "bar.standard",
+        "capabilityVersion": 1,
+        "shape": "single",
+        "source": {
+          "id": "events-v1",
+          "relation": "events",
+          "rowGrain": [
+            "event_id"
+          ],
+          "snapshot": "synthetic-v1"
+        },
+        "roles": {
+          "x": {
+            "alias": "x",
+            "type": "category",
+            "ref": "channel",
+            "label": "Channel"
+          },
+          "y": {
+            "alias": "y",
+            "type": "number",
+            "ref": "metric",
+            "label": "count_nonnull"
+          }
+        },
+        "metrics": {
+          "metric": {
+            "operation": "count_nonnull",
+            "inputs": [
+              "value"
+            ],
+            "unit": "values",
+            "population": "filtered-events",
+            "nullPolicy": "ignore-input-nulls",
+            "merge": "sum",
+            "state": {
+              "count": "y"
+            }
+          }
+        },
+        "resultGrain": [
+          "x"
+        ],
+        "time": null,
+        "filters": [
+          {
+            "field": "ts_utc",
+            "op": ">=",
+            "parameter": 1
+          },
+          {
+            "field": "ts_utc",
+            "op": "<",
+            "parameter": 2
+          }
+        ],
+        "parameterTypes": [
+          "text",
+          "text"
+        ],
+        "order": [
+          {
+            "alias": "x",
+            "direction": "asc"
+          }
+        ],
+        "options": {
+          "stackMode": "none"
+        },
+        "resultPolicy": {
+          "maxRows": 64,
+          "maxCells": 256,
+          "requiresComplete": true
+        }
+      },
+      "sql": "SELECT channel AS x, COUNT(value) AS y FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY channel ORDER BY x",
+      "params": [
+        "2026-01-01T00:00:00Z",
+        "2026-01-02T00:00:00Z"
+      ],
+      "roleAliasMap": {
+        "x": "x",
+        "y": "y"
+      },
+      "expectedRows": [
+        {
+          "x": "A",
+          "y": 2
+        },
+        {
+          "x": "B",
+          "y": 1
+        }
+      ],
+      "complete": true,
+      "expectedBehavior": "Preserve count_nonnull at the filtered event grain; do not count or sum marks as a new measure."
+    },
+    {
+      "id": "category-count_distinct",
+      "contract": {
+        "version": 1,
+        "id": "category-count_distinct",
+        "capability": "bar.standard",
+        "capabilityVersion": 1,
+        "shape": "single",
+        "source": {
+          "id": "events-v1",
+          "relation": "events",
+          "rowGrain": [
+            "event_id"
+          ],
+          "snapshot": "synthetic-v1"
+        },
+        "roles": {
+          "x": {
+            "alias": "x",
+            "type": "category",
+            "ref": "channel",
+            "label": "Channel"
+          },
+          "y": {
+            "alias": "y",
+            "type": "number",
+            "ref": "metric",
+            "label": "count_distinct"
+          }
+        },
+        "metrics": {
+          "metric": {
+            "operation": "count_distinct",
+            "inputs": [
+              "user_id"
+            ],
+            "unit": "users",
+            "population": "filtered-events",
+            "nullPolicy": "ignore-input-nulls",
+            "merge": "requery",
+            "state": {}
+          }
+        },
+        "resultGrain": [
+          "x"
+        ],
+        "time": null,
+        "filters": [
+          {
+            "field": "ts_utc",
+            "op": ">=",
+            "parameter": 1
+          },
+          {
+            "field": "ts_utc",
+            "op": "<",
+            "parameter": 2
+          }
+        ],
+        "parameterTypes": [
+          "text",
+          "text"
+        ],
+        "order": [
+          {
+            "alias": "x",
+            "direction": "asc"
+          }
+        ],
+        "options": {
+          "stackMode": "none"
+        },
+        "resultPolicy": {
+          "maxRows": 64,
+          "maxCells": 256,
+          "requiresComplete": true
+        }
+      },
+      "sql": "SELECT channel AS x, COUNT(DISTINCT user_id) AS y FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY channel ORDER BY x",
+      "params": [
+        "2026-01-01T00:00:00Z",
+        "2026-01-02T00:00:00Z"
+      ],
+      "roleAliasMap": {
+        "x": "x",
+        "y": "y"
+      },
+      "expectedRows": [
+        {
+          "x": "A",
+          "y": 3
+        },
+        {
+          "x": "B",
+          "y": 1
+        }
+      ],
+      "complete": true,
+      "expectedBehavior": "Preserve count_distinct at the filtered event grain; do not count or sum marks as a new measure."
+    },
+    {
+      "id": "category-time",
+      "contract": {
+        "version": 1,
+        "id": "category-time",
+        "capability": "bar.race",
+        "capabilityVersion": 1,
+        "shape": "category-time",
+        "source": {
+          "id": "events-v1",
+          "relation": "events",
+          "rowGrain": [
+            "event_id"
+          ],
+          "snapshot": "synthetic-v1"
+        },
+        "roles": {
+          "x": {
+            "alias": "x",
+            "type": "category",
+            "ref": "channel",
+            "label": "Channel"
+          },
+          "time": {
+            "alias": "time",
+            "type": "temporal",
+            "ref": "ts_utc",
+            "label": "UTC day"
+          },
+          "y": {
+            "alias": "y",
+            "type": "number",
+            "ref": "total_value",
+            "label": "Total value"
+          }
+        },
+        "metrics": {
+          "total_value": {
+            "operation": "sum",
+            "inputs": [
+              "value"
+            ],
+            "unit": "USD",
+            "population": "filtered-events",
+            "nullPolicy": "ignore-input-nulls",
+            "merge": "sum",
+            "state": {
+              "sum": "y",
+              "count": "n_y"
+            }
+          }
+        },
+        "resultGrain": [
+          "time",
+          "x"
+        ],
+        "time": {
+          "role": "time",
+          "sourceField": "ts_utc",
+          "zone": "UTC",
+          "grain": "day",
+          "origin": null,
+          "interval": "[start,end)",
+          "missing": "gap"
+        },
+        "filters": [
+          {
+            "field": "ts_utc",
+            "op": ">=",
+            "parameter": 1
+          },
+          {
+            "field": "ts_utc",
+            "op": "<",
+            "parameter": 2
+          }
+        ],
+        "parameterTypes": [
+          "text",
+          "text"
+        ],
+        "order": [
+          {
+            "alias": "time",
+            "direction": "asc"
+          },
+          {
+            "alias": "x",
+            "direction": "asc"
+          }
+        ],
+        "options": {
+          "stackMode": "none"
+        },
+        "resultPolicy": {
+          "maxRows": 64,
+          "maxCells": 256,
+          "requiresComplete": true
+        }
+      },
+      "sql": "SELECT channel AS x, substr(ts_utc, 1, 10) || 'T00:00:00Z' AS time, SUM(value) AS y, COUNT(value) AS n_y FROM events WHERE ts_utc >= $1 AND ts_utc < $2 GROUP BY channel, 2 ORDER BY time, x",
+      "params": [
+        "2026-01-01T00:00:00Z",
+        "2026-01-04T00:00:00Z"
+      ],
+      "roleAliasMap": {
+        "x": "x",
+        "time": "time",
+        "y": "y"
+      },
+      "expectedRows": [
+        {
+          "x": "A",
+          "time": "2026-01-01T00:00:00Z",
+          "y": 30,
+          "n_y": 2
+        },
+        {
+          "x": "B",
+          "time": "2026-01-01T00:00:00Z",
+          "y": 90,
+          "n_y": 1
+        },
+        {
+          "x": "A",
+          "time": "2026-01-02T00:00:00Z",
+          "y": 30,
+          "n_y": 1
+        },
+        {
+          "x": "B",
+          "time": "2026-01-02T00:00:00Z",
+          "y": 120,
+          "n_y": 2
+        },
+        {
+          "x": "A",
+          "time": "2026-01-03T00:00:00Z",
+          "y": null,
+          "n_y": 0
+        }
+      ],
+      "complete": true,
+      "expectedBehavior": "Reference shape only: select a static frame or use a separately implemented animation adapter. This numerical fixture does not certify playback or rendering."
+    }
+  ]
+}

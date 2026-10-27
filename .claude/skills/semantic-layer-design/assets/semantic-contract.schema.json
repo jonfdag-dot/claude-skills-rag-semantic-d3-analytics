@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Controlled semantic reconstruction workbook",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "identity", "query", "fields", "metrics", "rows", "candidate_meaning", "review_authority", "reviewed_edits", "value_policy", "embedding_contract", "variants", "expected"],
+  "properties": {
+    "contract_version": {"const": 1},
+    "identity": {"$ref": "#/$defs/identity"},
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sql", "parameterized_sql", "parameter", "grain_keys", "timezone", "calendar"],
+      "properties": {
+        "sql": {"type": "string", "minLength": 1},
+        "parameterized_sql": {"type": "string", "minLength": 1},
+        "parameter": {
+          "type": "object", "additionalProperties": false,
+          "required": ["name", "logical_type", "required", "nullable", "allowed_values", "approved_default", "approval_id"],
+          "properties": {
+            "name": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"},
+            "logical_type": {"const": "string"},
+            "required": {"type": "boolean"},
+            "nullable": {"type": "boolean"},
+            "allowed_values": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+            "approved_default": {"type": "string"},
+            "approval_id": {"type": "string", "minLength": 1}
+          }
+        },
+        "grain_keys": {"$ref": "#/$defs/identifiers"},
+        "timezone": {"type": "string", "minLength": 1},
+        "calendar": {"type": "string", "minLength": 1}
+      }
+    },
+    "fields": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/field"}},
+    "metrics": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/metric"}},
+    "rows": {"type": "array", "items": {"$ref": "#/$defs/visit"}},
+    "candidate_meaning": {
+      "type": "object", "additionalProperties": false,
+      "required": ["field_id", "generation_id", "description", "unit", "allowed_aggregations", "guidance", "status", "evidence_refs"],
+      "properties": {
+        "field_id": {"$ref": "#/$defs/identifier"},
+        "generation_id": {"type": "string", "minLength": 1},
+        "description": {"$ref": "#/$defs/string_wrapper"},
+        "unit": {"$ref": "#/$defs/string_wrapper"},
+        "allowed_aggregations": {"$ref": "#/$defs/aggregations"},
+        "guidance": {"type": "array", "items": {"type": "string"}},
+        "status": {"const": "supplied_illustration"},
+        "evidence_refs": {"$ref": "#/$defs/identifiers"}
+      }
+    },
+    "review_authority": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object", "additionalProperties": false,
+        "required": ["scope_id", "field_id", "query_revision"],
+        "properties": {
+          "scope_id": {"type": "string"},
+          "field_id": {"$ref": "#/$defs/identifier"},
+          "query_revision": {"type": "string"}
+        }
+      }
+    },
+    "reviewed_edits": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["review_id", "field_id", "generation_id", "operation", "path", "value"],
+        "properties": {
+          "review_id": {"type": "string", "minLength": 1},
+          "field_id": {"$ref": "#/$defs/identifier"},
+          "generation_id": {"type": "string", "minLength": 1},
+          "operation": {"const": "replace"},
+          "path": {"enum": ["description", "guidance"]},
+          "value": {"oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]}
+        }
+      }
+    },
+    "value_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["purpose", "max_distinct", "max_average_length", "max_unique_fraction", "max_values"],
+      "properties": {
+        "purpose": {"const": "illustrative_fixture_policy"},
+        "max_distinct": {"type": "integer", "minimum": 1},
+        "max_average_length": {"type": "integer", "minimum": 1},
+        "max_unique_fraction": {"type": "number", "minimum": 0, "maximum": 1},
+        "max_values": {"type": "integer", "minimum": 1}
+      }
+    },
+    "embedding_contract": {"$ref": "#/$defs/embedding_contract"},
+    "variants": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mean_groups", "ratio_groups", "overlapping_distinct", "snapshot_values"],
+      "properties": {
+        "mean_groups": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["sum", "nonnull_count"],
+            "properties": {"sum": {"type": "integer"}, "nonnull_count": {"type": "integer", "minimum": 1}}
+          }
+        },
+        "ratio_groups": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["numerator", "denominator"],
+            "properties": {"numerator": {"type": "integer", "minimum": 0}, "denominator": {"type": "integer", "minimum": 1}}
+          }
+        },
+        "overlapping_distinct": {"type": "array", "minItems": 2, "items": {"type": "array", "items": {"type": "string"}}},
+        "snapshot_values": {
+          "type": "array", "minItems": 2,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["at", "value"],
+            "properties": {"at": {"type": "string"}, "value": {"type": "integer"}}
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object", "additionalProperties": false,
+      "required": ["rows", "feedback_nonnull", "feedback_distinct", "site_distinct", "total_billed", "closed_rows", "closed_billed", "closed_by_zone", "outcome_frequencies", "reviewed_description", "reviewed_guidance"],
+      "properties": {
+        "rows": {"type": "integer"}, "feedback_nonnull": {"type": "integer"},
+        "feedback_distinct": {"type": "integer"}, "site_distinct": {"type": "integer"},
+        "total_billed": {"type": "integer"}, "closed_rows": {"type": "integer"}, "closed_billed": {"type": "integer"},
+        "closed_by_zone": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "outcome_frequencies": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "reviewed_description": {"type": "string"}, "reviewed_guidance": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"},
+    "identifiers": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}},
+    "aggregations": {"type": "array", "uniqueItems": true, "items": {"enum": ["sum", "avg", "min", "max", "count_rows", "count_nonnull", "count_distinct", "ratio", "latest"]}},
+    "string_wrapper": {"type": "object", "additionalProperties": false, "required": ["value"], "properties": {"value": {"type": "string"}}},
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scope_id", "source_id", "query_id", "query_revision", "population_id", "generation_id"],
+      "properties": {
+        "scope_id": {"type": "string", "minLength": 1}, "source_id": {"type": "string", "minLength": 1},
+        "query_id": {"type": "string", "minLength": 1}, "query_revision": {"type": "string", "minLength": 1},
+        "population_id": {"type": "string", "minLength": 1}, "generation_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "field": {
+      "type": "object", "additionalProperties": false,
+      "required": ["field_id", "logical_type", "meaning", "roles", "operations", "nullable", "missing_value_policy"],
+      "properties": {
+        "field_id": {"$ref": "#/$defs/identifier"},
+        "logical_type": {"enum": ["string", "integer", "decimal", "boolean", "date", "timestamp", "duration"]},
+        "meaning": {"enum": ["entity_identifier", "nominal_category", "ordinal_category", "event_time", "amount", "quantity", "ratio", "free_text", "boolean"]},
+        "roles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["entity_key", "dimension", "time_dimension", "measure", "attribute"]}},
+        "operations": {
+          "type": "object", "additionalProperties": false, "required": ["filter", "group", "order", "aggregate"],
+          "properties": {
+            "filter": {"type": "array", "uniqueItems": true, "items": {"enum": ["eq", "in", "between", "is_null"]}},
+            "group": {"type": "boolean"}, "order": {"enum": ["none", "lexical", "numeric", "temporal", "declared"]},
+            "aggregate": {"$ref": "#/$defs/aggregations"}
+          }
+        },
+        "nullable": {"type": "boolean"},
+        "missing_value_policy": {"enum": ["exclude", "retain_as_group", "unsupported"]}
+      }
+    },
+    "metric": {
+      "type": "object", "additionalProperties": false,
+      "required": ["metric_id", "field_id", "aggregation", "behavior", "unit", "merge_state", "allowed_axes"],
+      "properties": {
+        "metric_id": {"$ref": "#/$defs/identifier"}, "field_id": {"$ref": "#/$defs/identifier"},
+        "aggregation": {"enum": ["sum", "avg", "min", "max", "count_rows", "count_nonnull", "count_distinct"]},
+        "behavior": {"enum": ["additive", "semi_additive", "non_additive", "unknown"]},
+        "unit": {"type": "string", "minLength": 1},
+        "merge_state": {"$ref": "#/$defs/identifiers"}, "allowed_axes": {"$ref": "#/$defs/identifiers"}
+      }
+    },
+    "visit": {
+      "type": "object", "additionalProperties": false,
+      "required": ["visit_id", "site_code", "site_name", "zone", "started_at", "billed_amount", "feedback_score", "outcome"],
+      "properties": {
+        "visit_id": {"type": "string"}, "site_code": {"type": "integer"}, "site_name": {"type": "string"},
+        "zone": {"type": "string"}, "started_at": {"type": "string", "format": "date-time"},
+        "billed_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+        "feedback_score": {"type": ["integer", "null"]}, "outcome": {"enum": ["closed", "open", "void"]}
+      }
+    },
+    "encoder": {
+      "type": "object", "additionalProperties": false, "required": ["model_id", "revision", "recipe"],
+      "properties": {"model_id": {"type": "string"}, "revision": {"type": "string"}, "recipe": {"type": "string"}}
+    },
+    "embedding_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["space_id", "revision", "dimensions", "distance", "normalization", "document_encoder", "query_encoder"],
+      "properties": {
+        "space_id": {"type": "string"}, "revision": {"type": "string"}, "dimensions": {"type": "integer", "minimum": 1},
+        "distance": {"const": "cosine"}, "normalization": {"enum": ["l2", "none"]},
+        "document_encoder": {"$ref": "#/$defs/encoder"}, "query_encoder": {"$ref": "#/$defs/encoder"}
+      }
+    }
+  }
+}
